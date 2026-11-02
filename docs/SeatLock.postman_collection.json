@@ -1,14 +1,132 @@
 {
-  "info": { "name": "SeatLock API", "description": "Local API collection for the SeatLock concurrent booking system.", "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json" },
-  "variable": [{ "key": "baseUrl", "value": "http://localhost:8080/api/v1" }, { "key": "reservationId", "value": "" }],
+  "info": {
+    "name": "SeatLock API",
+    "description": "Local API collection for the SeatLock concurrent booking system.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080/api/v1"
+    },
+    {
+      "key": "reservationId",
+      "value": ""
+    }
+  ],
   "item": [
-    { "name": "Seats", "item": [{ "name": "List live seat status", "request": { "method": "GET", "url": "{{baseUrl}}/seats" } }] },
-    { "name": "Reservations", "item": [
-      { "name": "Hold seats", "event": [{ "listen": "test", "script": { "exec": ["const json = pm.response.json();", "pm.collectionVariables.set('reservationId', json.reservationId);"] } }], "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"customerName\": \"Amartya Singh\",\n  \"customerEmail\": \"amartya@example.com\",\n  \"seatNumbers\": [\"1A\", \"1B\"]\n}" }, "url": "{{baseUrl}}/reservations" } },
-      { "name": "Confirm reservation", "request": { "method": "POST", "url": "{{baseUrl}}/reservations/{{reservationId}}/confirm" } },
-      { "name": "Cancel reservation", "request": { "method": "POST", "url": "{{baseUrl}}/reservations/{{reservationId}}/cancel" } }
-    ] },
-    { "name": "Bookings", "item": [{ "name": "List booking history", "request": { "method": "GET", "url": "{{baseUrl}}/bookings" } }] },
-    { "name": "Operations", "item": [{ "name": "Health check", "request": { "method": "GET", "url": "http://localhost:8080/actuator/health" } }] }
+    {
+      "name": "Seats",
+      "item": [
+        {
+          "name": "List live seat status",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/seats"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reservations",
+      "item": [
+        {
+          "name": "Hold seats",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('reservationId', json.reservationId);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerName\": \"Amartya Singh\",\n  \"customerEmail\": \"amartya@example.com\",\n  \"seatNumbers\": [\"1A\", \"1B\"]\n}"
+            },
+            "url": "{{baseUrl}}/reservations"
+          }
+        },
+        {
+          "name": "Hold an already held seat (expect 409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerName\": \"Second Customer\",\n  \"customerEmail\": \"second@example.com\",\n  \"seatNumbers\": [\n    \"1A\",\n    \"1B\"\n  ]\n}"
+            },
+            "url": "{{baseUrl}}/reservations",
+            "description": "Run immediately after \"Hold seats\" with the same seat numbers. A second customer trying to hold a seat that is locked or booked receives 409 SEAT_UNAVAILABLE."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Seat conflict is rejected with 409', () => pm.response.to.have.status(409));",
+                  "pm.test('Error code explains the conflict', () => pm.expect(pm.response.json().code).to.eql('SEAT_UNAVAILABLE'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Confirm reservation",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/reservations/{{reservationId}}/confirm"
+          }
+        },
+        {
+          "name": "Cancel reservation",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/reservations/{{reservationId}}/cancel"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bookings",
+      "item": [
+        {
+          "name": "List booking history",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/bookings"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Operations",
+      "item": [
+        {
+          "name": "Health check",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:8080/actuator/health"
+          }
+        }
+      ]
+    }
   ]
 }

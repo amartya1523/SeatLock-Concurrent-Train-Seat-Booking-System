@@ -15,8 +15,8 @@ SeatLock is a production-minded train seat reservation application built to stay
 - Race-safe confirmation using PostgreSQL row locks and unique constraints
 - Automatic expiry cleanup plus request-time expiry checks
 - Responsive React + TypeScript interface with clear success and error feedback
-- Booking history API, health endpoint, Swagger UI, and Postman collection
-- Flyway-managed schema, Docker Compose, and a 100-customer concurrency test
+- Booking history view and API, health endpoint, Swagger UI, and Postman collection
+- Flyway-managed schema, Docker Compose, a 100-customer concurrency test, and a live load script
 
 ## Architecture
 
@@ -36,6 +36,7 @@ SeatLock/
 ├── frontend/                 React 19, TypeScript, Vite, Nginx
 ├── backend/                  Java 17, Spring Boot, JPA, Flyway
 ├── docs/                     Postman collection and screenshots
+├── scripts/                  100-customer concurrency demo
 ├── docker-compose.yml        Complete local stack
 ├── Makefile                  Common development commands
 └── README.md
@@ -61,15 +62,15 @@ Stop with `docker compose down`. Add `-v` to erase local booking data.
 
 ## Deploy to Render
 
-The repository includes a root-level `render.yaml` Blueprint that provisions the complete public stack:
+The repository includes a root-level `render.yaml` Blueprint for the public stack:
 
 - a React static site on Render's CDN;
 - a Docker-based Spring Boot web service;
-- a private PostgreSQL 16 database;
+- an existing Render PostgreSQL instance (`callmatch-db`), with SeatLock isolated in its own `seatlock` schema;
 - cross-service API and CORS configuration;
 - automatic deployment from the `main` branch.
 
-In the Render Dashboard, create a new Blueprint, select this repository, and apply the detected `render.yaml`. The free database is suitable for an assignment demonstration but expires after 30 days, and the free backend may sleep after inactivity.
+In the Render Dashboard, create a new Blueprint, select this repository, and apply the detected `render.yaml`. To use a different database, change the `fromDatabase.name` entries to your PostgreSQL instance; credentials are injected by Render and never stored in the repository. The free backend may sleep after inactivity, so the first request can take up to a minute.
 
 ## Run services separately
 
@@ -174,13 +175,45 @@ npm run lint
 npm run build
 ```
 
-`ConcurrentBookingIntegrationTest` starts isolated PostgreSQL, releases all 100 customers simultaneously, and verifies exactly 20 unique confirmations with no duplicate seat. `ReservationLifecycleIntegrationTest` verifies cancellation release, automatic expiry, and rejection of expired confirmation. Docker must be running for these integration tests.
+Docker must be running for the backend integration tests, which start an isolated PostgreSQL container:
 
-An additional end-to-end load run against the real API produced:
+| Test | Verifies |
+|---|---|
+| `ConcurrentBookingIntegrationTest` | 100 customers released at once produce exactly 20 confirmations and 20 unique seats |
+| `ReservationLifecycleIntegrationTest` | Cancellation releases seats; expired holds release seats, are rejected with `410`, and are persisted as `EXPIRED` |
+| `SeatConflictIntegrationTest` | Locked or booked seats return `409 SEAT_UNAVAILABLE`; a reservation cannot be confirmed twice |
 
-```json
-{ "requests": 100, "holds": 20, "confirmed": 20, "uniqueSeats": 20, "duplicates": 0 }
+## Live concurrency demo
+
+With the stack running (`docker compose up --build`), fire 100 simultaneous customers at the real API. The script needs Node.js 18+ and no extra packages:
+
+```bash
+node scripts/concurrency-demo.mjs            # or: make demo
 ```
+
+Each customer holds one seat and confirms it immediately, with five customers competing for each of the 20 seats. On a fresh database the output is:
+
+```text
+"outcomes": { "CONFIRMED": 20, "SEAT_UNAVAILABLE": 80 },
+"confirmedThisRun": 20,
+"uniqueSeatsThisRun": 20,
+"totalBookedSeats": 20,
+"duplicateSeatsInDatabase": 0
+PASS: no seat was booked twice and at most 20 seats are confirmed.
+```
+
+Refresh the UI afterwards to see all 20 seats marked Booked and listed under booking history. Reset the demo data with `make reset`, which recreates the database volume.
+
+## Demonstration checklist
+
+| Assignment step | How to show it |
+|---|---|
+| Select and temporarily lock a seat | Pick seats in the UI, enter name and email, then click **Hold selected seats** to start the 2:00 countdown |
+| Confirm and show updated status | Click **Confirm & pay**; the seat turns Booked and appears in booking history |
+| Cancel or let a lock expire | Click **Cancel reservation**, or wait two minutes; the seat returns to Available |
+| Book a locked or booked seat | Hold a seat in one browser window, then try the same seat from a second window or Postman's **Hold an already held seat** request to get `409 SEAT_UNAVAILABLE` |
+| Simultaneous requests | `node scripts/concurrency-demo.mjs`, or `ConcurrentBookingIntegrationTest` |
+| No more than 20 seats, none twice | The script's `PASS` summary and `GET /api/v1/bookings` |
 
 ## Configuration
 
