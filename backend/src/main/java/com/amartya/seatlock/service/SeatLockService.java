@@ -51,7 +51,8 @@ public class SeatLockService {
         return toReservation(reservationRepository.save(reservation), now);
     }
 
-    @Transactional
+    // Commit on BookingException so an expired hold is persisted as EXPIRED; no other rejection path writes data.
+    @Transactional(noRollbackFor = BookingException.class)
     public BookingResponse confirm(UUID reservationId) {
         Instant now = Instant.now();
         Reservation reservation = reservationRepository.findByIdForUpdate(reservationId).orElseThrow(() -> error(HttpStatus.NOT_FOUND, "RESERVATION_NOT_FOUND", "Reservation not found."));

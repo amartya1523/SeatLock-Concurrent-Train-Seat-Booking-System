@@ -1,6 +1,9 @@
 package com.amartya.seatlock;
 
 import com.amartya.seatlock.api.dto.*;
+import com.amartya.seatlock.domain.Reservation;
+import com.amartya.seatlock.domain.ReservationStatus;
+import com.amartya.seatlock.repository.ReservationRepository;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -27,6 +30,7 @@ class ReservationLifecycleIntegrationTest {
     }
 
     @Autowired TestRestTemplate client;
+    @Autowired ReservationRepository reservations;
 
     @Test
     void cancelledReservationImmediatelyReleasesItsSeat() {
@@ -50,6 +54,7 @@ class ReservationLifecycleIntegrationTest {
         assertThat(confirmation.getStatusCode()).isEqualTo(HttpStatus.GONE);
         assertThat(confirmation.getBody()).extracting(ApiError::code).isEqualTo("RESERVATION_EXPIRED");
         assertThat(statusOf("1B")).isEqualTo("AVAILABLE");
+        assertThat(reservations.findById(hold.reservationId())).get().extracting(Reservation::getStatus).isEqualTo(ReservationStatus.EXPIRED);
     }
 
     private ReservationResponse createHold(String seatNumber) {
