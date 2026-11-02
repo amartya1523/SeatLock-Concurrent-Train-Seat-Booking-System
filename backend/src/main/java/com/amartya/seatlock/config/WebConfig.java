@@ -13,7 +13,8 @@ public class WebConfig implements WebMvcConfigurer {
     @Value("${FRONTEND_HOST:}") private String frontendHost;
     @Override public void addCorsMappings(CorsRegistry registry) {
         List<String> origins = new ArrayList<>(List.of(allowedOrigin));
-        if (!frontendHost.isBlank()) origins.add("https://" + frontendHost);
+        // Render's `host` property is a bare service name, so add the public domain when missing.
+        if (!frontendHost.isBlank()) origins.add("https://" + (frontendHost.contains(".") ? frontendHost : frontendHost + ".onrender.com"));
         registry.addMapping("/api/**").allowedOrigins(origins.toArray(String[]::new)).allowedMethods("GET", "POST", "OPTIONS").allowedHeaders("*");
     }
 }
