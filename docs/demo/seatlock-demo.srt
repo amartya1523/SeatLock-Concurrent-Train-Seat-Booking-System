@@ -1,0 +1,75 @@
+1
+00:00:01,537 --> 00:00:06,687
+SeatLock demo: seat locking, confirmation, cancellation, expiry, conflicts and 100 concurrent users.
+
+2
+00:00:06,687 --> 00:00:11,604
+The React client loads live seat status from the Spring Boot API backed by PostgreSQL.
+
+3
+00:00:11,604 --> 00:00:16,376
+One coach with 20 seats. Each seat is Available, Held (locked) or Booked.
+
+4
+00:00:16,376 --> 00:00:18,698
+Select seats 1A and 1B, then enter passenger details.
+
+5
+00:00:18,698 --> 00:00:23,700
+The seats are now locked in the database with a countdown timer (shortened to 20 s for this recording; default is 2 minutes).
+
+6
+00:00:23,700 --> 00:00:26,667
+Simulated payment: Confirm & pay turns the hold into a durable booking.
+
+7
+00:00:26,667 --> 00:00:32,523
+Booking confirmed with a unique reference. Seats 1A and 1B are now shown as Booked.
+
+8
+00:00:32,523 --> 00:00:38,191
+Now hold seat 2A and cancel the reservation.
+
+9
+00:00:38,191 --> 00:00:42,695
+Cancelling releases the lock immediately: seat 2A is Available again.
+
+10
+00:00:42,695 --> 00:00:47,250
+Hold seat 3A and let the lock expire without confirming.
+
+11
+00:00:47,250 --> 00:01:05,225
+Waiting for the countdown to reach zero. Expired locks can never be confirmed.
+
+12
+00:01:05,225 --> 00:01:10,229
+The hold expired and seat 3A became Available again. The server rejects late confirmations with 410 Gone.
+
+13
+00:01:10,229 --> 00:01:13,418
+Conflict: we select seat 4A while another customer grabs it first through the API.
+
+14
+00:01:13,418 --> 00:01:19,478
+The API answers 409 SEAT_UNAVAILABLE and the UI shows a clear error. No seat is ever double-booked.
+
+15
+00:01:19,478 --> 00:01:24,589
+Core challenge: a script releases 100 customers at the same moment, five competing for each of the 20 seats.
+
+16
+00:01:24,589 --> 00:01:32,594
+Result: only the free seats were confirmed, the rest got 409, and the database holds zero duplicate seats.
+
+17
+00:01:32,594 --> 00:01:38,002
+Back in the UI every seat is Booked — never more than 20 confirmations.
+
+18
+00:01:38,002 --> 00:01:42,544
+Booking history lists each confirmed reference; every seat appears exactly once.
+
+19
+00:01:42,544 --> 00:01:48,546
+Row locks plus a database UNIQUE constraint guarantee one passenger per seat. Thanks for watching!

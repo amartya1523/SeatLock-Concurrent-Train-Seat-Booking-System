@@ -8,6 +8,25 @@
 
 SeatLock is a production-minded train seat reservation application built to stay correct under contention. It presents one coach with 20 seats while safely handling 100 simultaneous customers, two-minute temporary holds, booking confirmation, cancellation, expiry, and live availability.
 
+## Live demo
+
+| | Link |
+|---|---|
+| Application | [seatlock-web-nb7o.onrender.com](https://seatlock-web-nb7o.onrender.com) |
+| REST API | [seatlock-api-jjb4.onrender.com/api/v1/seats](https://seatlock-api-jjb4.onrender.com/api/v1/seats) |
+| Swagger UI | [seatlock-api-jjb4.onrender.com/swagger-ui.html](https://seatlock-api-jjb4.onrender.com/swagger-ui.html) |
+| Health | [seatlock-api-jjb4.onrender.com/actuator/health](https://seatlock-api-jjb4.onrender.com/actuator/health) |
+
+The API runs on Render's free tier and sleeps when idle, so the first request can take up to a minute.
+
+## Demo video
+
+[![Watch the SeatLock demo video (1:49, subtitled)](docs/demo/seatlock-demo-poster.jpg)](docs/demo/seatlock-demo.mp4)
+
+**▶ [Watch the 1:49 subtitled demo](docs/demo/seatlock-demo.mp4)**
+
+The subtitled walkthrough ([`docs/demo/seatlock-demo.mp4`](docs/demo/seatlock-demo.mp4), captions also in [`seatlock-demo.srt`](docs/demo/seatlock-demo.srt)) covers every mandatory demonstration step: selecting and locking seats, confirming a booking, cancelling, letting a lock expire, a `409` conflict on an already-held seat, and 100 simultaneous customers producing exactly 20 bookings with zero duplicates. The hold was shortened to 20 seconds for the recording with `LOCK_DURATION=PT20S docker compose up --build`; the default is two minutes.
+
 ## Highlights
 
 - 20-seat interactive coach with Available, Selected, Held, and Booked states
@@ -35,7 +54,7 @@ PostgreSQL 16 (host port 55432)
 SeatLock/
 ├── frontend/                 React 19, TypeScript, Vite, Nginx
 ├── backend/                  Java 17, Spring Boot, JPA, Flyway
-├── docs/                     Postman collection and screenshots
+├── docs/                     Postman collection, screenshots, demo video
 ├── scripts/                  100-customer concurrency demo
 ├── docker-compose.yml        Complete local stack
 ├── Makefile                  Common development commands
@@ -47,8 +66,8 @@ SeatLock/
 Prerequisites: Docker Desktop with Docker Compose v2 and ports `5173`, `8080`, and `55432` available.
 
 ```bash
-git clone https://github.com/amartya1523/SeatLock-Concurrent-Train-Seat-Booking-System..git
-cd SeatLock-Concurrent-Train-Seat-Booking-System.
+git clone https://github.com/amartya1523/SeatLock-Concurrent-Train-Seat-Booking-System.git
+cd SeatLock-Concurrent-Train-Seat-Booking-System
 docker compose up --build
 ```
 
@@ -67,10 +86,9 @@ The repository includes a root-level `render.yaml` Blueprint for the public stac
 - a React static site on Render's CDN;
 - a Docker-based Spring Boot web service;
 - an existing Render PostgreSQL instance (`callmatch-db`), with SeatLock isolated in its own `seatlock` schema;
-- cross-service API and CORS configuration;
-- automatic deployment from the `main` branch.
+- cross-service API and CORS configuration.
 
-In the Render Dashboard, create a new Blueprint, select this repository, and apply the detected `render.yaml`. To use a different database, change the `fromDatabase.name` entries to your PostgreSQL instance; credentials are injected by Render and never stored in the repository. The free backend may sleep after inactivity, so the first request can take up to a minute.
+The live deployment above was created from this Blueprint. In the Render Dashboard, create a new Blueprint, select this repository, and apply the detected `render.yaml`. To use a different database, change the `fromDatabase.name` entries to your PostgreSQL instance; credentials are injected by Render and never stored in the repository. The free backend may sleep after inactivity, so the first request can take up to a minute.
 
 ## Run services separately
 
