@@ -23,7 +23,7 @@ class ConcurrentBookingIntegrationTest {
 
     @Test
     void oneHundredConcurrentCustomersCanNeverDoubleBookTwentySeats() throws Exception {
-        ExecutorService pool = Executors.newFixedThreadPool(40);
+        ExecutorService pool = Executors.newFixedThreadPool(100);
         try {
             CountDownLatch ready = new CountDownLatch(100);
             CountDownLatch start = new CountDownLatch(1);
@@ -39,13 +39,14 @@ class ConcurrentBookingIntegrationTest {
                     return client.postForEntity("/api/v1/reservations/" + hold.getBody().reservationId() + "/confirm", null, BookingResponse.class).getBody();
                 }));
             }
-            ready.await(10, TimeUnit.SECONDS); start.countDown();
+            assertThat(ready.await(10, TimeUnit.SECONDS)).isTrue();
+            start.countDown();
             List<BookingResponse> winners = new ArrayList<>();
             for (Future<BookingResponse> attempt : attempts) { BookingResponse booking = attempt.get(30, TimeUnit.SECONDS); if (booking != null) winners.add(booking); }
             Set<String> bookedSeats = new HashSet<>();
             winners.forEach(booking -> bookedSeats.addAll(booking.seatNumbers()));
-            assertThat(winners).hasSizeLessThanOrEqualTo(20);
-            assertThat(bookedSeats).hasSize(winners.size());
+            assertThat(winners).hasSize(20);
+            assertThat(bookedSeats).hasSize(20);
         } finally {
             pool.shutdownNow();
         }
