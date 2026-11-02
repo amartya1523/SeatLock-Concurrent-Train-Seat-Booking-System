@@ -15,8 +15,11 @@ spring:
     properties:
       hibernate:
         jdbc.time_zone: UTC
+        default_schema: ${DB_SCHEMA:public}
   flyway:
     enabled: true
+    schemas: ${DB_SCHEMA:public}
+    create-schemas: true
   jackson:
     default-property-inclusion: non_null
 
