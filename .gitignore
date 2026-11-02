@@ -1,0 +1,23 @@
+.DS_Store
+.idea/
+.vscode/
+*.iml
+
+# Environment
+.env
+.env.local
+
+# Backend
+backend/target/
+backend/.classpath
+backend/.project
+backend/.settings/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/coverage/
+frontend/*.local
+
+# Logs
+*.log
