@@ -4,10 +4,16 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
     @Value("${seatlock.allowed-origin:http://localhost:5173}") private String allowedOrigin;
+    @Value("${FRONTEND_HOST:}") private String frontendHost;
     @Override public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/api/**").allowedOrigins(allowedOrigin).allowedMethods("GET", "POST", "OPTIONS").allowedHeaders("*");
+        List<String> origins = new ArrayList<>(List.of(allowedOrigin));
+        if (!frontendHost.isBlank()) origins.add("https://" + frontendHost);
+        registry.addMapping("/api/**").allowedOrigins(origins.toArray(String[]::new)).allowedMethods("GET", "POST", "OPTIONS").allowedHeaders("*");
     }
 }

@@ -59,6 +59,18 @@ Open:
 
 Stop with `docker compose down`. Add `-v` to erase local booking data.
 
+## Deploy to Render
+
+The repository includes a root-level `render.yaml` Blueprint that provisions the complete public stack:
+
+- a React static site on Render's CDN;
+- a Docker-based Spring Boot web service;
+- a private PostgreSQL 16 database;
+- cross-service API and CORS configuration;
+- automatic deployment from the `main` branch.
+
+In the Render Dashboard, create a new Blueprint, select this repository, and apply the detected `render.yaml`. The free database is suitable for an assignment demonstration but expires after 30 days, and the free backend may sleep after inactivity.
+
 ## Run services separately
 
 Prerequisites: Java 17+, Node.js 20+, npm, and Docker or PostgreSQL 14+.
