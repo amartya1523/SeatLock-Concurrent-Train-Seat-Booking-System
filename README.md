@@ -162,7 +162,7 @@ npm run lint
 npm run build
 ```
 
-`ConcurrentBookingIntegrationTest` starts isolated PostgreSQL, releases 100 customers simultaneously, and verifies no more than 20 confirmations and no duplicate seat. Docker must be running for the integration test.
+`ConcurrentBookingIntegrationTest` starts isolated PostgreSQL, releases all 100 customers simultaneously, and verifies exactly 20 unique confirmations with no duplicate seat. `ReservationLifecycleIntegrationTest` verifies cancellation release, automatic expiry, and rejection of expired confirmation. Docker must be running for these integration tests.
 
 An additional end-to-end load run against the real API produced:
 
