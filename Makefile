@@ -1,4 +1,4 @@
-.PHONY: up down logs test build
+.PHONY: up down logs test build demo reset
 
 up:
 	docker compose up --build
@@ -8,6 +8,13 @@ down:
 
 logs:
 	docker compose logs -f
+
+demo:
+	node scripts/concurrency-demo.mjs
+
+reset:
+	docker compose down -v
+	docker compose up --build -d
 
 test:
 	cd backend && ./mvnw test
