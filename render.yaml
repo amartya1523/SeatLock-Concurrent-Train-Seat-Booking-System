@@ -6,7 +6,6 @@ services:
     region: oregon
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
-    dockerCommand: bash -c 'export DB_URL="jdbc:${DATABASE_URL}"; exec java -jar app.jar'
     healthCheckPath: /actuator/health
     autoDeployTrigger: commit
     envVars:

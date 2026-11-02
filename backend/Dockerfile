@@ -12,4 +12,4 @@ COPY --from=build /app/target/seatlock-1.0.0.jar app.jar
 USER seatlock
 EXPOSE 8080
 HEALTHCHECK --interval=15s --timeout=3s --start-period=25s --retries=5 CMD bash -c 'exec 3<>/dev/tcp/localhost/8080' || exit 1
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["sh", "-c", "if [ -n \"$DATABASE_URL\" ]; then export DB_URL=\"jdbc:$DATABASE_URL\"; fi; exec java -jar app.jar"]
