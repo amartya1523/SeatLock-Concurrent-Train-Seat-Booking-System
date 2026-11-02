@@ -16,10 +16,11 @@ export default function App() {
   const [action, setAction] = useState('');
   const [toast, setToast] = useState<Toast>(null);
   const [remaining, setRemaining] = useState(0);
+  const [history, setHistory] = useState<Booking[]>([]);
 
   const refresh = useCallback(async (quiet = false) => {
     if (!quiet) setLoading(true);
-    try { setSeats(await api.seats()); } catch (e) { if (!quiet) setToast({ kind: 'error', message: (e as Error).message }); }
+    try { const [nextSeats, nextHistory] = await Promise.all([api.seats(), api.bookings()]); setSeats(nextSeats); setHistory(nextHistory); } catch (e) { if (!quiet) setToast({ kind: 'error', message: (e as Error).message }); }
     finally { if (!quiet) setLoading(false); }
   }, []);
 
@@ -59,7 +60,7 @@ export default function App() {
   const clock = `${String(Math.floor(remaining / 60)).padStart(2, '0')}:${String(remaining % 60).padStart(2, '0')}`;
 
   return <div className="app-shell">
-    <header className="navbar"><a className="brand" href="#top"><span className="brand-mark"><TrainFront size={20}/></span><span>Seat<span>Lock</span></span></a><nav><a href="#coach">Choose seats</a><a href="#safety">How it works</a></nav><div className="secure"><ShieldCheck size={17}/> Secure booking</div></header>
+    <header className="navbar"><a className="brand" href="#top"><span className="brand-mark"><TrainFront size={20}/></span><span>Seat<span>Lock</span></span></a><nav><a href="#coach">Choose seats</a><a href="#history">Bookings</a><a href="#safety">How it works</a></nav><div className="secure"><ShieldCheck size={17}/> Secure booking</div></header>
     <main id="top">
       <section className="hero">
         <div className="hero-copy"><div className="eyebrow"><Sparkles size={14}/> Effortless rail travel</div><h1>Your journey,<br/><em>perfectly seated.</em></h1><p>Choose your seat, hold it securely, and board with confidence. Fast reservations built for busy routes.</p><a className="hero-cta" href="#coach">Find your seat <ArrowRight size={18}/></a><div className="trust-row"><span><ShieldCheck/>Safe & secure</span><span><Clock3/>2-minute hold</span><span><Ticket/>Instant confirmation</span></div></div>
@@ -89,6 +90,14 @@ export default function App() {
             </>}
           </aside>
         </div>
+      </section>
+
+      <section className="history-section" id="history">
+        <div className="section-heading"><div><span className="step">03</span><p>BOOKING HISTORY</p><h2>Confirmed bookings</h2><small>{history.length} bookings · {history.reduce((sum, b) => sum + b.seatNumbers.length, 0)} of {seats.length || 20} seats confirmed</small></div></div>
+        {history.length ? <div className="history-table" role="table" aria-label="Confirmed bookings">
+          <div className="history-row head" role="row"><span role="columnheader">Reference</span><span role="columnheader">Passenger</span><span role="columnheader">Seats</span><span role="columnheader">Confirmed</span></div>
+          {history.map(b => <div className="history-row" role="row" key={b.bookingId}><strong role="cell">{b.reference}</strong><span role="cell">{b.customerName}</span><span role="cell" className="history-seats">{b.seatNumbers.map(s => <b key={s}>{s}</b>)}</span><span role="cell">{new Date(b.confirmedAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}</span></div>)}
+        </div> : <div className="history-empty"><Ticket/><span>No confirmed bookings yet.</span></div>}
       </section>
 
       <section className="safety" id="safety"><div><p>BUILT FOR THE RUSH</p><h2>Every seat. One passenger.<br/>Guaranteed.</h2></div><div className="feature"><span><Users/></span><div><strong>Concurrency safe</strong><p>Even when 100 travellers book at once, database-level locks keep every confirmation unique.</p></div></div><div className="feature"><span><Clock3/></span><div><strong>Fair 2-minute holds</strong><p>Your chosen seats are yours while you confirm. Expired holds release automatically.</p></div></div></section>
